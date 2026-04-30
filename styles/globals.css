@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Sora:wght@400;600;700&display=swap');
+
+:root {
+  --bg-dark: #0A0A0A;
+  --surface: #111111;
+  --card-bg: #141414;
+  --card-border: #F69423;
+  --primary-accent: #F69423;
+  --secondary-accent: #F69423;
+  --text-primary: #FFFFFF;
+  --text-muted: #888888;
+  --map-marker: #F69423;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* App-like feel, no scroll */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Sora', sans-serif;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; text-shadow: 0 0 10px rgba(246, 148, 35, 0.5); }
+  100% { opacity: 0.7; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  50% { transform: translateX(10px); }
+  75% { transform: translateX(-10px); }
+}
+
+@keyframes radialGlow {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes pulseLoader {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.5; }
+}
+
+.pulse-loader {
+  animation: pulseLoader 1.5s infinite ease-in-out;
+}
+
+.glow-text {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+.shake-anim {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Leaflet map overrides */
+.leaflet-container {
+  background: #f5f0e8 !important;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.uni-pin-icon {
+  background-color: var(--primary-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(246, 148, 35, 0.25), 0 0 20px 6px rgba(246, 148, 35, 0.4);
+  position: relative;
+}
+
+.uni-pin-icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: inherit;
+  animation: radialGlow 2s infinite;
+}
+
+/* Hide scrollbar for bus list */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Leaflet Tooltip Customization */
+.leaflet-tooltip {
+  background-color: #0A0A0A !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--card-border) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  padding: 5px 12px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.3px !important;
+}
+
+.leaflet-tooltip-top:before {
+  border-top-color: #0A0A0A !important;
+}
