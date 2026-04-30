@@ -8,6 +8,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'MIT BUS',
   description: 'Live bus tracking system for MIT University Shillong',
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23F69423'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='system-ui'>🚌</text></svg>",
+  },
 };
 
 export default function RootLayout({
