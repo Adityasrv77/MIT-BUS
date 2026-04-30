@@ -1,8 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const containerVars = {
   hidden: { opacity: 0 },
@@ -19,6 +19,35 @@ const itemVars = {
 
 export default function RoleSelect() {
   const router = useRouter();
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    // Hide button if already installed
+    window.addEventListener('appinstalled', () => {
+      setInstallPrompt(null);
+      setInstalled(true);
+    });
+
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+      setInstalled(true);
+    }
+  };
+
   return (
     <motion.div 
       style={{
@@ -78,7 +107,31 @@ export default function RoleSelect() {
         >
           Admin
         </motion.button>
+
+        {/* Install App — only shown when browser supports it and not yet installed */}
+        {installPrompt && !installed && (
+          <motion.button
+            variants={itemVars}
+            onClick={handleInstall}
+            style={{
+              width: '80%', padding: '14px 0', margin: '20px auto 0', display: 'block',
+              border: '1px solid #333', borderRadius: '16px',
+              color: '#666', fontSize: '14px', fontWeight: 600,
+              background: 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              marginLeft: 'auto', marginRight: 'auto',
+            }}
+            whileHover={{ borderColor: 'var(--primary-accent)', color: 'var(--primary-accent)' }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+            Install App
+          </motion.button>
+        )}
       </motion.div>
     </motion.div>
   );
 }
+
