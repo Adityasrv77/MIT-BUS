@@ -32,7 +32,6 @@ export default function GuestView() {
   const [showList, setShowList] = useState(true);
   const reservationIdRef = useRef<string | null>(null);
   const [showBusPicker, setShowBusPicker] = useState(false);
-  const [showCredits, setShowCredits] = useState(false);
 
   // Home selection flow
   const [homeStep, setHomeStep] = useState<'initial' | 'bus' | 'place'>('initial');
@@ -206,7 +205,7 @@ export default function GuestView() {
         </div>
         <button
           id="credits-info-btn"
-          onClick={() => setShowCredits(true)}
+          onClick={() => router.push('/credits')}
           style={{
             width: '24px',
             height: '24px',
@@ -675,47 +674,6 @@ export default function GuestView() {
       </div>
 
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
-
-      {/* Credits Modal */}
-      {showCredits && (
-        <div
-          onClick={() => setShowCredits(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-          }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.15 }}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              top: '64px',
-              right: '16px',
-              backgroundColor: '#0e0e0e',
-              border: '1px solid #2a2a2a',
-              borderRadius: '14px',
-              padding: '16px 18px',
-              width: '220px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-            }}
-          >
-            <p style={{ margin: '0 0 14px', fontSize: '10px', color: '#444', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>Credits</p>
-            {[
-              { role: 'Ideation & Concept', name: 'Bitupan Deka' },
-              { role: 'Design', name: 'Onkar Mukherjee' },
-              { role: 'Development', name: 'Aditya Srivastava' },
-            ].map(({ role, name }, i, arr) => (
-              <div key={role}>
-                <p style={{ margin: '0 0 1px', fontSize: '10px', color: '#F69423', fontWeight: '600' }}>{role}</p>
-                <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#ddd' }}>{name}</p>
-                {i < arr.length - 1 && <div style={{ height: '1px', backgroundColor: '#1c1c1c', margin: '10px 0' }} />}
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      )}
     </motion.div>
   );
 }
