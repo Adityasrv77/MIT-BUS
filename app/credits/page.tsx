@@ -3,23 +3,78 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
-const team = [
-  {
-    role: 'Concept & Ideation',
-    name: 'Bitupan Deka',
-    initial: 'B',
-  },
-  {
-    role: 'Design',
-    name: 'Onkar Mukherjee',
-    initial: 'O',
-  },
-  {
-    role: 'Development',
-    name: 'Aditya Srivastava',
-    initial: 'A',
-  },
+const devTeam = [
+  { role: 'Concept & Ideation', name: 'Bitupan Deka', initial: 'B' },
+  { role: 'Design', name: 'Onkar Mukherjee', initial: 'O' },
+  { role: 'Development', name: 'Aditya Srivastava', initial: 'A' },
 ];
+
+const adminTeam = [
+  { role: 'Administrative Officer', name: 'Debojyoti Deb Roy', initial: 'D' },
+  { role: 'Administrative Officer', name: 'Niewkoelang Syiemlieh', initial: 'N' },
+  { role: 'Driver', name: 'Driver 1', initial: '1' },
+  { role: 'Driver', name: 'Driver 2', initial: '2' },
+  { role: 'Driver', name: 'Driver 3', initial: '3' },
+  { role: 'Driver', name: 'Driver 4', initial: '4' },
+  { role: 'Driver', name: 'Driver 5', initial: '5' },
+];
+
+function Section({
+  label,
+  members,
+  startDelay = 0,
+}: {
+  label: string;
+  members: { role: string; name: string; initial: string }[];
+  startDelay?: number;
+}) {
+  return (
+    <div style={{ marginBottom: '40px' }}>
+      <p style={{ margin: '0 0 14px', fontSize: '11px', color: '#444', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
+        {label}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {members.map(({ role, name, initial }, i) => (
+          <motion.div
+            key={`${label}-${name}`}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: startDelay + i * 0.06 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              padding: '14px 16px',
+              backgroundColor: '#111',
+              border: '1px solid #1c1c1c',
+              borderRadius: '14px',
+            }}
+          >
+            <div style={{
+              width: '38px', height: '38px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(246,148,35,0.08)',
+              border: '1px solid rgba(246,148,35,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '14px', fontWeight: '800', color: '#F69423',
+              flexShrink: 0,
+            }}>
+              {initial}
+            </div>
+            <div>
+              <p style={{ margin: '0 0 1px', fontSize: '10px', color: '#F69423', fontWeight: '700', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                {role}
+              </p>
+              <p style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#fff' }}>
+                {name}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function CreditsPage() {
   const router = useRouter();
@@ -88,60 +143,16 @@ export default function CreditsPage() {
           <div style={{ width: '32px', height: '2px', backgroundColor: '#F69423', marginTop: '16px', borderRadius: '1px' }} />
         </motion.div>
 
-        {/* Team */}
-        <p style={{ margin: '0 0 16px', fontSize: '11px', color: '#444', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase' }}>
-          Developer Team
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {team.map(({ role, name, initial }, i) => (
-            <motion.div
-              key={role}
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 + i * 0.08 }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                padding: '16px 18px',
-                backgroundColor: '#111',
-                border: '1px solid #1c1c1c',
-                borderRadius: '16px',
-              }}
-            >
-              {/* Avatar */}
-              <div style={{
-                width: '42px', height: '42px',
-                borderRadius: '12px',
-                backgroundColor: 'rgba(246,148,35,0.1)',
-                border: '1px solid rgba(246,148,35,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '16px', fontWeight: '800', color: '#F69423',
-                fontFamily: "'Sora', sans-serif",
-                flexShrink: 0,
-              }}>
-                {initial}
-              </div>
-
-              <div>
-                <p style={{ margin: '0 0 2px', fontSize: '10px', color: '#F69423', fontWeight: '700', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-                  {role}
-                </p>
-                <p style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#fff' }}>
-                  {name}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <Section label="Admin Team" members={adminTeam} startDelay={0.1} />
+        <Section label="Developer Team" members={devTeam} startDelay={0.5} />
 
         {/* Footer note */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.8 }}
           style={{
-            marginTop: '48px',
+            marginTop: '16px',
             fontSize: '12px',
             color: '#2e2e2e',
             textAlign: 'center',

@@ -47,8 +47,8 @@ export default function AdminLogin() {
       transition={{ type: 'tween', ease: 'easeOut', duration: 0.4 }}
     >
       <button 
-        onClick={() => router.push('/role-select')}
-        style={{ position: 'absolute', top: 30, left: 20, color: 'var(--text-muted)', fontSize: '24px' }}
+        onClick={() => router.back()}
+        style={{ position: 'absolute', top: 30, left: 20, color: 'var(--text-muted)', fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer' }}
       >
         ←
       </button>

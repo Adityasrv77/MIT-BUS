@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../lib/useGeolocation';
 import { useBusLocations } from '../lib/useBusLocations';
@@ -28,6 +28,7 @@ export default function AdminPanel() {
   const [showManagement, setShowManagement] = useState(false);
   const [activeTab, setActiveTab] = useState<'control' | 'map' | 'schedule'>('control');
   const [routeSummary, setRouteSummary] = useState<string>('');
+  const wakeLockRef = useRef<any>(null);
 
   useEffect(() => {
     if (!selectedBus) return;
@@ -44,6 +45,23 @@ export default function AdminPanel() {
         }
       });
   }, [selectedBus]);
+
+  // Wake lock — keep screen on while broadcasting
+  useEffect(() => {
+    const acquire = async () => {
+      if (!sharing) {
+        if (wakeLockRef.current) { wakeLockRef.current.release(); wakeLockRef.current = null; }
+        return;
+      }
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch (_) {}
+    };
+    acquire();
+    return () => { if (wakeLockRef.current) { wakeLockRef.current.release(); wakeLockRef.current = null; } };
+  }, [sharing]);
   
 
   const { coords, error, occupiedSeats, totalSeats, busLabel } = useGeolocation(selectedBus, sharing);
@@ -67,11 +85,8 @@ export default function AdminPanel() {
           <div style={{ width: '100%', maxWidth: '400px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button
-                onClick={() => router.push('/role-select')}
-                style={{
-                  background: 'var(--surface)', padding: '8px 14px', borderRadius: '8px',
-                  color: 'var(--text-primary)', border: '1px solid #333', fontSize: '14px'
-                }}
+                onClick={() => router.back()}
+                style={{ background: 'var(--surface)', padding: '8px 14px', borderRadius: '8px', color: 'var(--text-primary)', border: '1px solid #333', fontSize: '14px' }}
               >
                 ← Back
               </button>
@@ -243,14 +258,12 @@ export default function AdminPanel() {
                   <div style={{ fontSize: '11px', color: '#555', fontFamily: 'monospace' }}>
                     LAT: {coords.lat.toFixed(5)} | LNG: {coords.lng.toFixed(5)}
                   </div>
-                  <div style={{ 
-                    fontSize: '10px', 
-                    marginTop: '4px',
-                    fontWeight: '700',
-                    color: coords.accuracy < 20 ? '#10B981' : coords.accuracy < 100 ? '#F59E0B' : '#EF4444'
-                  }}>
+                  <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: '700', color: coords.accuracy < 20 ? '#10B981' : coords.accuracy < 100 ? '#F59E0B' : '#EF4444' }}>
                     Accuracy: ±{Math.round(coords.accuracy)} meters
                     {coords.accuracy > 100 && " (Weak GPS Signal)"}
+                  </div>
+                  <div style={{ marginTop: '12px', fontSize: '11px', color: '#F69423', fontWeight: '600', letterSpacing: '0.3px' }}>
+                    🔆 Keep your device always on
                   </div>
                 </div>
               )}

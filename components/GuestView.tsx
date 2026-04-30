@@ -27,7 +27,32 @@ export default function GuestView() {
   const router = useRouter();
   const buses = useBusLocations();
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [activeTab, setActiveTabState] = useState<Tab>('home');
+
+  // Sync tab with URL hash for back/forward support
+  const setActiveTab = (tab: Tab) => {
+    if (tab === 'home') {
+      window.history.pushState(null, '', '#home');
+    } else {
+      window.history.pushState(null, '', `#${tab}`);
+    }
+    setActiveTabState(tab);
+  };
+
+  useEffect(() => {
+    // Read initial hash
+    const hash = window.location.hash.replace('#', '') as Tab;
+    if (hash === 'map' || hash === 'line') setActiveTabState(hash);
+
+    // Listen for browser back/forward
+    const onPop = () => {
+      const h = window.location.hash.replace('#', '') as Tab;
+      setActiveTabState(h === 'map' || h === 'line' ? h : 'home');
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   const [isBoarded, setIsBoarded] = useState(false);
   const [showList, setShowList] = useState(true);
   const reservationIdRef = useRef<string | null>(null);
@@ -183,7 +208,7 @@ export default function GuestView() {
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
         <button 
-          onClick={() => router.push('/role-select')}
+          onClick={() => router.back()}
           style={{
             background: 'rgba(255, 255, 255, 0.05)', 
             padding: '8px 12px', 
@@ -287,7 +312,7 @@ export default function GuestView() {
                   animate="visible"
                   variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
                 >
-                  {buses.map(bus => (
+                  {buses.filter(b => b.active).map(bus => (
                     <BusCard 
                       key={bus.id} 
                       bus={bus} 
