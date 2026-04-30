@@ -439,10 +439,16 @@ export default function GuestView() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ marginBottom: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                     <h3 style={{ fontSize: '20px', fontWeight: '800', margin: 0 }}>Select Bus</h3>
-                    <button onClick={() => setHomeStep('initial')} style={{ color: '#666', fontSize: '13px', fontWeight: '700' }}>Cancel</button>
+                    <button onClick={() => setHomeStep('initial')} style={{ color: '#666', fontSize: '13px', fontWeight: '700', background: 'none', border: 'none', cursor: 'pointer' }}>Cancel</button>
                   </div>
                   <div style={{ display: 'grid', gap: '12px' }}>
-                    {busesList.map(bus => (
+                    {buses.filter(b => b.active).length === 0 && (
+                      <div style={{ padding: '32px 20px', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px dashed #222', borderRadius: '16px' }}>
+                        <p style={{ margin: 0, color: '#444', fontSize: '14px', fontWeight: '600' }}>No buses are online right now</p>
+                        <p style={{ margin: '6px 0 0', color: '#333', fontSize: '12px' }}>Please check back shortly</p>
+                      </div>
+                    )}
+                    {buses.filter(b => b.active).map(bus => (
                       <motion.button
                         key={bus.id}
                         whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.05)' }}
@@ -459,14 +465,20 @@ export default function GuestView() {
                           fontWeight: '700',
                           display: 'flex',
                           alignItems: 'center',
+                          justifyContent: 'space-between',
                           gap: '14px',
                           boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                         }}
                       >
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'rgba(246,148,35,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Bus size={18} color="var(--primary-accent)" />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'rgba(246,148,35,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Bus size={18} color="var(--primary-accent)" />
+                          </div>
+                          {bus.label}
                         </div>
-                        {bus.label}
+                        <span style={{ fontSize: '12px', fontWeight: '800', color: bus.seatsAvailable === 0 ? '#EF4444' : bus.seatsAvailable <= 5 ? '#F59E0B' : '#10B981', backgroundColor: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: '8px' }}>
+                          {bus.seatsAvailable}/{bus.totalSeats || 25}
+                        </span>
                       </motion.button>
                     ))}
                   </div>

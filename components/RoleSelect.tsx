@@ -96,6 +96,10 @@ export default function RoleSelect() {
               </motion.p>
             )}
 
+            <p style={{ marginTop: '12px', fontSize: '11px', color: '#333', textAlign: 'center' }}>
+              Use <span style={{ color: '#555', fontWeight: '700' }}>Chrome</span> for a smoother install experience
+            </p>
+
             <motion.button variants={itemVars} onClick={() => router.push('/guest')}
               style={{ marginTop: '16px', fontSize: '13px', color: '#444', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: '#333' }}
             >
