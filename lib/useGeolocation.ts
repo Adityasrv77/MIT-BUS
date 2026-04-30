@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { ref, update } from 'firebase/database';
+import { ref, update, runTransaction } from 'firebase/database';
 import { db } from './firebase';
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 // ── Haversine distance between two GPS points (returns meters) ──────────────
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -20,7 +21,7 @@ const MIN_DISTANCE_M = 5;       // Ignore updates if bus moved less than 5 metre
 const MAX_ACCURACY_M = 80;      // Discard readings worse than 80m (IP/WiFi guesses)
 const ALPHA = 0.4;              // Smoothing factor: 0 = very smooth, 1 = raw
 
-export function useGeolocation(busId: string | null, active: boolean) {
+export function useGeolocation(busId: string | null, active: boolean, sessionId: string) {
   const [error, setError] = useState<string | null>(null);
   const [coords, setCoords] = useState<{lat: number, lng: number, accuracy: number} | null>(null);
   const [occupiedSeats, setOccupiedSeats] = useState(0);
@@ -85,9 +86,6 @@ export function useGeolocation(busId: string | null, active: boolean) {
     if (!busId) return;
 
     if (!active) {
-      if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        update(ref(db, `buses/${busId}`), { active: false });
-      }
       setCoords(null);
       // Reset smoothing on stop
       lastPushedRef.current = null;
@@ -130,6 +128,7 @@ export function useGeolocation(busId: string | null, active: boolean) {
         if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
           update(ref(db, `buses/${busId}`), {
             active: true,
+            sharing_by: sessionId,
             lat: smoothLat,
             lng: smoothLng,
             heading: heading || 0,
@@ -140,6 +139,7 @@ export function useGeolocation(busId: string | null, active: boolean) {
       },
       (err) => {
         setError(err.message);
+        logger.error('Geolocation Error', err, { busId });
       },
       {
         enableHighAccuracy: true,
@@ -151,20 +151,40 @@ export function useGeolocation(busId: string | null, active: boolean) {
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
-  }, [busId, active]);
+  }, [busId, active, sessionId]);
 
   // 3. Dedicated effect for active status (prevents flickering)
   useEffect(() => {
     if (!busId || !process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
 
     if (active) {
-      update(ref(db, `buses/${busId}`), { active: true });
+      update(ref(db, `buses/${busId}`), { 
+        active: true,
+        sharing_by: sessionId,
+        lastUpdated: Date.now()
+      });
+    }
+
+    const stopSharing = () => {
+      const busRef = ref(db, `buses/${busId}`);
+      runTransaction(busRef, (currentData) => {
+        if (currentData && currentData.sharing_by === sessionId) {
+          return { ...currentData, active: false };
+        }
+        return; // Abort transaction if we aren't the owner
+      }).catch(() => {});
+    };
+
+    if (!active) {
+      stopSharing();
     }
 
     return () => {
-      update(ref(db, `buses/${busId}`), { active: false });
+      if (active) {
+        stopSharing();
+      }
     };
-  }, [busId, active]);
+  }, [busId, active, sessionId]);
 
   return { coords, error, occupiedSeats, totalSeats, busLabel };
 }

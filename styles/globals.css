@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Sora:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
   --bg-dark: #0A0A0A;
@@ -21,14 +21,14 @@
 html, body {
   background-color: var(--bg-dark);
   color: var(--text-primary);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   height: 100%;
   width: 100%;
   overflow: hidden; /* App-like feel, no scroll */
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Sora', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 button {
@@ -84,7 +84,7 @@ input {
 /* Leaflet map overrides */
 .leaflet-container {
   background: #f5f0e8 !important;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .uni-pin-icon {
@@ -120,7 +120,7 @@ input {
   background-color: #0A0A0A !important;
   color: #FFFFFF !important;
   border: 1px solid var(--card-border) !important;
-  font-family: 'DM Sans', sans-serif !important;
+  font-family: 'Montserrat', sans-serif !important;
   font-weight: 700 !important;
   border-radius: 10px !important;
   padding: 5px 12px !important;

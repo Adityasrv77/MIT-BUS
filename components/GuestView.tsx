@@ -244,7 +244,7 @@ export default function GuestView() {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            fontFamily: 'serif',
+            fontFamily: 'Montserrat, sans-serif',
             flexShrink: 0,
           }}
         >

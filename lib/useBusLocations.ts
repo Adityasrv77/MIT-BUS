@@ -6,6 +6,7 @@ import { supabase, type BusRecord } from './supabase';
 export type BusData = {
   id: string;
   active: boolean;
+  sharing_by?: string;
   lat: number;
   lng: number;
   heading: number;
@@ -104,8 +105,9 @@ export function useBusLocations() {
       return {
         id,
         active: fb.active ?? sb.is_active,
-        lat: fb.lat || 25.560124,
-        lng: fb.lng || 91.903749,
+        sharing_by: fb.sharing_by,
+        lat: fb.lat || 25.615765,
+        lng: fb.lng || 91.990026,
         heading: fb.heading || 0,
         lastUpdated: fb.lastUpdated || Date.now(),
         label: sb.label || fb.label || id.replace('bus', 'Bus '),

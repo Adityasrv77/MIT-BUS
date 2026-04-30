@@ -81,7 +81,7 @@ type MapViewProps = {
 };
 
 // ── Main component ────────────────────────────────────────────────────────────
-const CENTER: [number, number] = [25.560124, 91.903749];
+const CENTER: [number, number] = [25.615765, 91.990026];
 
 export default memo(function MapView({ buses, selectedBusId }: MapViewProps) {
   const activeBuses = useMemo(() => buses.filter(b => b.active), [buses]);

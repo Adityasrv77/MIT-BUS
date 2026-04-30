@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Map, List, Radio, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
 
 const MapView = dynamic(() => import('./MapView'), { ssr: false });
 
@@ -28,7 +29,46 @@ export default function AdminPanel() {
   const [showManagement, setShowManagement] = useState(false);
   const [activeTab, setActiveTab] = useState<'control' | 'map' | 'schedule'>('control');
   const [routeSummary, setRouteSummary] = useState<string>('');
+  const [showConfirm, setShowConfirm] = useState<{show: boolean, type: 'takeover' | 'none'}>({show: false, type: 'none'});
+  const [pendingBus, setPendingBus] = useState<string | null>(null);
   const wakeLockRef = useRef<any>(null);
+  const sessionId = getSessionId();
+
+  const { coords, error, occupiedSeats, totalSeats, busLabel } = useGeolocation(selectedBus, sharing, sessionId);
+  const allBuses = useBusLocations();
+
+  // Recovery: check if this device was sharing this bus
+  useEffect(() => {
+    if (selectedBus && !sharing) {
+      const stored = localStorage.getItem('mit_bus_active_sharing');
+      if (stored === selectedBus) {
+        setSharing(true);
+      }
+    }
+  }, [selectedBus]);
+
+  // Sync sharing state to local storage
+  useEffect(() => {
+    if (sharing && selectedBus) {
+      localStorage.setItem('mit_bus_active_sharing', selectedBus);
+    } else if (!sharing && selectedBus) {
+      localStorage.removeItem('mit_bus_active_sharing');
+    }
+  }, [sharing, selectedBus]);
+
+  // Handle external takeover: if someone else starts sharing this bus, we stop.
+  useEffect(() => {
+    if (sharing && selectedBus) {
+      const currentBus = allBuses.find(b => b.id === selectedBus);
+      // Only stop if the remote state clearly shows a DIFFERENT active session
+      // We give it a small grace period (check lastUpdated) or just trust the ID
+      if (currentBus && currentBus.active && currentBus.sharing_by && currentBus.sharing_by !== sessionId) {
+        setSharing(false);
+        localStorage.removeItem('mit_bus_active_sharing');
+        // Optional: show a toast or alert
+      }
+    }
+  }, [allBuses, sharing, selectedBus, sessionId]);
 
   useEffect(() => {
     if (!selectedBus) return;
@@ -57,15 +97,60 @@ export default function AdminPanel() {
         if ('wakeLock' in navigator) {
           wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
         }
-      } catch (_) {}
+      } catch (err) {
+        logger.error('WakeLock Error', err);
+      }
     };
     acquire();
     return () => { if (wakeLockRef.current) { wakeLockRef.current.release(); wakeLockRef.current = null; } };
   }, [sharing]);
   
 
-  const { coords, error, occupiedSeats, totalSeats, busLabel } = useGeolocation(selectedBus, sharing);
-  const allBuses = useBusLocations();
+
+
+  const handleBusSelect = (bus: string) => {
+    // Check if someone else is already sharing this specific bus
+    const currentBus = allBuses.find(b => b.id === bus);
+    if (currentBus?.active && currentBus.sharing_by && currentBus.sharing_by !== sessionId) {
+      setPendingBus(bus);
+      setShowConfirm({ show: true, type: 'takeover' });
+      return;
+    }
+    setSelectedBus(bus);
+  };
+
+  const handleToggleSharing = () => {
+    if (!sharing) {
+      // Check if someone else is already sharing
+      const currentBus = allBuses.find(b => b.id === selectedBus);
+      if (currentBus?.active && currentBus.sharing_by && currentBus.sharing_by !== sessionId) {
+        setShowConfirm({ show: true, type: 'takeover' });
+        return;
+      }
+      setSharing(true);
+    } else {
+      setSharing(false);
+    }
+  };
+
+  const renderConfirmModal = () => (
+    <ConfirmModal
+      show={showConfirm.show}
+      onConfirm={() => {
+        const busToSelect = pendingBus || selectedBus;
+        if (busToSelect) {
+          setSelectedBus(busToSelect);
+          setSharing(true);
+          setPendingBus(null);
+        }
+        setShowConfirm({ show: false, type: 'none' });
+      }}
+      onCancel={() => {
+        setPendingBus(null);
+        setShowConfirm({ show: false, type: 'none' });
+      }}
+    />
+  );
 
   const buses = ['bus1', 'bus2', 'bus3', 'bus4', 'bus5'];
 
@@ -109,7 +194,7 @@ export default function AdminPanel() {
               }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setSelectedBus(bus)}
+              onClick={() => handleBusSelect(bus)}
             >
               <h3 style={{ fontSize: '24px', margin: 0, color: 'var(--text-primary)' }}>Bus {idx + 1}</h3>
             </motion.div>
@@ -125,6 +210,7 @@ export default function AdminPanel() {
                 border: '1px solid rgba(246,148,35,0.4)',
                 borderRadius: '12px',
                 color: 'var(--primary-accent)',
+                fontFamily: 'Montserrat, sans-serif',
                 fontSize: '15px',
                 fontWeight: '700',
                 display: 'flex',
@@ -137,6 +223,7 @@ export default function AdminPanel() {
             </button>
           </div>
         </motion.div>
+        {renderConfirmModal()}
       </>
     );
   }
@@ -152,7 +239,16 @@ export default function AdminPanel() {
       {/* Header */}
       <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1c1c1c', zIndex: 1001, backgroundColor: 'var(--bg-dark)' }}>
         <button
-          onClick={() => { setSharing(false); setSelectedBus(null); }}
+          onClick={() => { 
+            if (sharing) {
+              if (confirm('Stop sharing location before changing bus?')) {
+                setSharing(false);
+                setSelectedBus(null);
+              }
+            } else {
+              setSelectedBus(null); 
+            }
+          }}
           style={{
             background: 'var(--surface)', padding: '8px 14px', borderRadius: '8px',
             color: 'var(--text-primary)', border: '1px solid #333', fontSize: '14px'
@@ -212,7 +308,7 @@ export default function AdminPanel() {
                     boxShadow: sharing ? '0 0 40px rgba(246, 148, 35, 0.3)' : '0 10px 30px rgba(0,0,0,0.5)',
                     position: 'relative', zIndex: 1, outline: 'none'
                   }}
-                  onClick={() => setSharing(!sharing)}
+                  onClick={handleToggleSharing}
                   whileTap={{ scale: 0.95 }}
                 >
                   <span style={{ fontSize: '18px', fontWeight: 800, color: sharing ? 'var(--primary-accent)' : '#fff' }}>
@@ -255,7 +351,7 @@ export default function AdminPanel() {
               {/* Lat/Lng display if needed */}
               {sharing && coords && (
                 <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#555', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '11px', color: '#555' }}>
                     LAT: {coords.lat.toFixed(5)} | LNG: {coords.lng.toFixed(5)}
                   </div>
                   <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: '700', color: coords.accuracy < 20 ? '#10B981' : coords.accuracy < 100 ? '#F59E0B' : '#EF4444' }}>
@@ -313,9 +409,72 @@ export default function AdminPanel() {
           </button>
         ))}
       </div>
+      {renderConfirmModal()}
     </motion.div>
   );
 }
+
+// ── Confirm Modal Helper ────────────────────────────────────
+function ConfirmModal({ show, onConfirm, onCancel }: { show: boolean, onConfirm: () => void, onCancel: () => void }) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onCancel}
+            style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }} 
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            style={{
+              width: '100%', maxWidth: '340px', backgroundColor: 'var(--card-bg)', 
+              borderRadius: '24px', padding: '30px', border: '1px solid #333',
+              position: 'relative', zIndex: 1, textAlign: 'center'
+            }}
+          >
+            <div style={{ 
+              width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'rgba(246,148,35,0.1)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' 
+            }}>
+              <Radio size={30} color="var(--primary-accent)" />
+            </div>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 12px', color: '#fff' }}>Bus Already Active</h3>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: 1.5, margin: '0 0 24px' }}>
+              Another driver is already sharing the live location for this bus. Do you want to take over?
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={onCancel}
+                style={{
+                  flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #333',
+                  backgroundColor: 'transparent', color: '#fff', fontWeight: 700, fontSize: '14px'
+                }}
+              >
+                No, cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                style={{
+                  flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
+                  backgroundColor: 'var(--primary-accent)', color: '#000', fontWeight: 800, fontSize: '14px'
+                }}
+              >
+                Yes, take over
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+
 
 // ─── Pickup Summary Helper ───────────────────────────────────
 function PickupSummary({ busId }: { busId: string }) {
