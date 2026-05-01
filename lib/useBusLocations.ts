@@ -14,7 +14,6 @@ export type BusData = {
   seatsAvailable: number;
   totalSeats: number;
   occupiedSeats: number;
-  occupiedSeats: number;
   label: string;
   nearestLocation?: string;
 };
