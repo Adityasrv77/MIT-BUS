@@ -10,6 +10,7 @@ import BusCard from './BusCard';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, MapPin, Bus } from 'lucide-react';
+import ProximityFeed from './ProximityFeed';
 
 const MapView = dynamic(() => import('./MapView'), { ssr: false });
 
@@ -208,7 +209,7 @@ export default function GuestView() {
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
         <button 
-          onClick={() => router.back()}
+          onClick={() => router.push('/')}
           style={{
             background: 'rgba(255, 255, 255, 0.05)', 
             padding: '8px 12px', 
@@ -225,7 +226,7 @@ export default function GuestView() {
           <span>←</span> Back
         </button>
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '18px', fontWeight: '900', margin: 0, color: 'var(--primary-accent)', letterSpacing: '2px', textTransform: 'uppercase' }}>MIT BUS</h1>
+          <h1 style={{ fontSize: '18px', fontWeight: '900', margin: 0, color: 'var(--primary-accent)', letterSpacing: '2px' }}>Mit Bus</h1>
           <div style={{ width: '20px', height: '2px', backgroundColor: 'var(--primary-accent)', margin: '2px auto 0', borderRadius: '1px' }} />
         </div>
         <button
@@ -400,11 +401,14 @@ export default function GuestView() {
               </motion.div>
             </div>
 
+            {/* Proximity Feed */}
+            <ProximityFeed />
+
             {/* Action Cards */}
             <div style={{ padding: '20px' }}>
 
               {/* Selection Flow */}
-              {homeStep === 'initial' && !isBoarded && (
+              {homeStep === 'initial' && !isBoarded && !(homeBus && homePlace) && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                   <motion.button
                     whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(246, 148, 35, 0.3)' }}
@@ -418,7 +422,7 @@ export default function GuestView() {
                       border: 'none',
                       borderRadius: '24px',
                       fontSize: '17px',
-                      fontWeight: '900',
+                      fontWeight: 'normal',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',

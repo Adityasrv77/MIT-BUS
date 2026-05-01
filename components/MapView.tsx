@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, memo } from 'react';
+import { useEffect, useMemo, memo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { BusData } from '../lib/useBusLocations';
+import { db } from '../lib/firebase';
+import { ref, update } from 'firebase/database';
 
 // ── Stable icon instances ─────────────────────────────────────────────────────
 // Created once at module level — never re-created on re-render
-const uniIcon = L.divIcon({
-  className: 'uni-pin-icon',
-  iconSize: [22, 22],
-  iconAnchor: [11, 11],
+const uniDotIcon = L.divIcon({
+  className: 'uni-dot-icon',
+  html: `<div style="width: 14px; height: 14px; background-color: #F69423; border-radius: 50%; box-shadow: 0 0 0 6px rgba(246, 148, 35, 0.25);"></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
 });
 
 // Icon cache: reuse the same L.Icon object for identical headings (rounded to 5°)
@@ -68,7 +71,8 @@ const BusMarker = memo(function BusMarker({ bus }: { bus: BusData }) {
         direction="top"
         offset={[0, -15]}
       >
-        {bus.label} · {bus.seatsAvailable}/{bus.totalSeats || 25}
+        {bus.label}
+        {bus.nearestLocation ? ` · ${bus.nearestLocation}` : ''}
       </Tooltip>
     </Marker>
   );
@@ -81,7 +85,7 @@ type MapViewProps = {
 };
 
 // ── Main component ────────────────────────────────────────────────────────────
-const CENTER: [number, number] = [25.615765, 91.990026];
+const CENTER: [number, number] = [25.615774, 91.990012];
 
 export default memo(function MapView({ buses, selectedBusId }: MapViewProps) {
   const activeBuses = useMemo(() => buses.filter(b => b.active), [buses]);
@@ -106,8 +110,8 @@ export default memo(function MapView({ buses, selectedBusId }: MapViewProps) {
       />
 
       {/* University pin — stable, never re-renders */}
-      <Marker position={CENTER} icon={uniIcon}>
-        <Tooltip permanent direction="top" offset={[0, -10]}>
+      <Marker position={CENTER} icon={uniDotIcon}>
+        <Tooltip permanent direction="top" offset={[0, -10]} opacity={1}>
           MIT University Shillong
         </Tooltip>
       </Marker>
@@ -121,6 +125,56 @@ export default memo(function MapView({ buses, selectedBusId }: MapViewProps) {
       ))}
 
       <MapUpdater selectedBusId={selectedBusId} buses={buses} />
+
+      {/* TEMP MOVER OVERLAY */}
+      <div style={{ position: 'absolute', top: 60, right: 10, zIndex: 1000 }}>
+        <TempMover />
+      </div>
     </MapContainer>
   );
 });
+
+// Temp component to test moving buses via Firebase
+function TempMover() {
+  const [coords, setCoords] = useState('');
+  const [busId, setBusId] = useState('bus1');
+
+  const handleMove = async () => {
+    const [lat, lng] = coords.split(',').map(s => parseFloat(s.trim()));
+    if (!lat || !lng) return alert('Invalid coordinates format. Use "lat, lng"');
+    try {
+      await update(ref(db, `buses/${busId}`), {
+        lat,
+        lng,
+        active: true,
+        lastUpdated: Date.now()
+      });
+      alert(`Moved ${busId} to ${lat}, ${lng}`);
+    } catch(e) {
+      console.error(e);
+      alert('Failed to move bus');
+    }
+  };
+
+  return (
+    <div style={{ background: 'rgba(0,0,0,0.85)', padding: '12px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid #444', width: '200px' }}>
+      <h4 style={{ margin: 0, color: 'var(--primary-accent)', fontSize: '13px' }}>Test Bus Mover</h4>
+      <input 
+        value={busId} onChange={e => setBusId(e.target.value)} 
+        placeholder="bus ID (e.g. bus1)" 
+        style={{ width: '100%', padding: '6px', fontSize: '12px', borderRadius: '6px', border: '1px solid #333', background: '#222', color: '#fff' }} 
+      />
+      <input 
+        value={coords} onChange={e => setCoords(e.target.value)} 
+        placeholder="25.615, 91.990" 
+        style={{ width: '100%', padding: '6px', fontSize: '12px', borderRadius: '6px', border: '1px solid #333', background: '#222', color: '#fff' }} 
+      />
+      <button 
+        onClick={handleMove} 
+        style={{ background: 'var(--primary-accent)', color: '#000', padding: '6px', cursor: 'pointer', borderRadius: '6px', border: 'none', fontWeight: 'bold', fontSize: '12px' }}
+      >
+        Teleport Bus
+      </button>
+    </div>
+  );
+}

@@ -14,13 +14,51 @@ export type BusData = {
   seatsAvailable: number;
   totalSeats: number;
   occupiedSeats: number;
+  occupiedSeats: number;
   label: string;
+  nearestLocation?: string;
 };
+
+type GeoPoint = {
+  'Location name': string;
+  Latitude?: number;
+  Longitude?: number;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
+};
+
+function getCoords(p: GeoPoint) {
+  let lat = Number(p.Latitude ?? p.latitude ?? p.lat ?? 0);
+  let lng = Number(p.Longitude ?? p.longitude ?? p.lng ?? 0);
+
+  // Auto-correct swapped coordinates in the DB (India is lat 20-30, lng 70-90)
+  if (lat > 60 && lng < 40) {
+    const temp = lat;
+    lat = lng;
+    lng = temp;
+  }
+
+  return { lat, lng };
+}
+
+export function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 export function useBusLocations() {
   const [fbBuses, setFbBuses] = useState<Record<string, any>>({});
   const [supabaseBuses, setSupabaseBuses] = useState<BusRecord[]>([]);
   const [counts, setCounts] = useState<Record<string, { reserved: number, boarded: number }>>({});
+  const [geoPoints, setGeoPoints] = useState<GeoPoint[]>([]);
 
   // Prevent stale fetches — abort any in-flight request when a new one starts
   const abortRef = useRef<AbortController | null>(null);
@@ -32,16 +70,16 @@ export function useBusLocations() {
       if (abortRef.current) abortRef.current.abort();
       abortRef.current = new AbortController();
 
-      // Run both queries in PARALLEL for speed (was sequential before)
-      const [busResult, resResult] = await Promise.all([
+      // Run all queries in PARALLEL for speed
+      const [busResult, resResult, geoResult] = await Promise.all([
         supabase
           .from('buses')
-          // Only fetch the columns we actually use — not SELECT *
           .select('id, label, total_seats, is_active'),
         supabase
           .from('reservations')
           .select('bus_id, stop_name')
-          .eq('status', 'active')
+          .eq('status', 'active'),
+        geoPoints.length === 0 ? supabase.from('Geolocation').select('*') : Promise.resolve({ data: geoPoints })
       ]);
 
       if (busResult.data) setSupabaseBuses(busResult.data as BusRecord[]);
@@ -58,6 +96,10 @@ export function useBusLocations() {
         });
         setCounts(newCounts);
       }
+
+      if (geoResult.data && geoPoints.length === 0) {
+        setGeoPoints(geoResult.data as GeoPoint[]);
+      }
     };
 
     fetchData();
@@ -65,7 +107,7 @@ export function useBusLocations() {
 
     // Realtime listener for instant push updates
     const channel = supabase
-      .channel('db-sync')
+      .channel(`db-sync-locations-${Math.random().toString(36).substring(7)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'buses' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'routes' }, fetchData)
@@ -102,12 +144,42 @@ export function useBusLocations() {
       const physicalTotal = Math.max(0, capacity - boarded);
       const available = Math.max(0, physicalTotal - reserved);
 
+      const lat = fb.lat || 25.615765;
+      const lng = fb.lng || 91.990026;
+
+      let nearestLoc = undefined;
+      
+      // DEBUG LOG
+      if (id === 'bus1') console.log('DEBUG GeoPoints:', geoPoints.length, geoPoints[0]);
+
+      if (geoPoints.length > 0 && fb.lat && fb.lng) {
+        let nearestDist = Infinity;
+        geoPoints.forEach(p => {
+          const coords = getCoords(p);
+          const d = haversineDistance(lat, lng, coords.lat, coords.lng);
+          if (d < nearestDist) {
+            nearestDist = d;
+            nearestLoc = p['Location name'];
+          }
+        });
+        // Only attach if it's within 500 meters
+        if (nearestDist > 500) nearestLoc = undefined;
+      }
+
+      // Fallback explicitly for MIT University campus if not mapped in DB
+      if (!nearestLoc) {
+        const dCenter = haversineDistance(lat, lng, 25.615774, 91.990012);
+        if (dCenter < 500) {
+          nearestLoc = "MIT University Shillong";
+        }
+      }
+
       return {
         id,
         active: fb.active ?? sb.is_active,
         sharing_by: fb.sharing_by,
-        lat: fb.lat || 25.615765,
-        lng: fb.lng || 91.990026,
+        lat,
+        lng,
         heading: fb.heading || 0,
         lastUpdated: fb.lastUpdated || Date.now(),
         label: sb.label || fb.label || id.replace('bus', 'Bus '),
@@ -115,9 +187,10 @@ export function useBusLocations() {
         reservedSeats: reserved,
         totalSeats: capacity,
         seatsAvailable: available,
+        nearestLocation: nearestLoc,
       } as BusData;
     });
-  }, [fbBuses, supabaseBuses, counts]);
+  }, [fbBuses, supabaseBuses, counts, geoPoints]);
 
   return buses;
 }

@@ -47,10 +47,34 @@ export default function AdminLogin() {
       transition={{ type: 'tween', ease: 'easeOut', duration: 0.4 }}
     >
       <button 
-        onClick={() => router.back()}
-        style={{ position: 'absolute', top: 30, left: 20, color: 'var(--text-muted)', fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer' }}
+        onClick={() => router.push('/')}
+        style={{ position: 'absolute', top: 30, left: 20, color: 'var(--text-muted)', fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer', zIndex: 100 }}
       >
         ←
+      </button>
+      <button
+        onClick={() => router.push('/credits')}
+        style={{
+          position: 'absolute',
+          top: '30px',
+          right: '20px',
+          width: '24px',
+          height: '24px',
+          borderRadius: '50%',
+          background: 'transparent',
+          border: '1px solid #444',
+          color: '#666',
+          fontSize: '11px',
+          fontWeight: '700',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          fontFamily: 'Montserrat, sans-serif',
+          zIndex: 100,
+        }}
+      >
+        i
       </button>
 
       <motion.div 
@@ -65,7 +89,7 @@ export default function AdminLogin() {
           textAlign: 'center'
         }}
       >
-        <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '5px', color: 'var(--primary-accent)', letterSpacing: '1px' }}>MIT BUS</h2>
+        <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '5px', color: 'var(--primary-accent)', letterSpacing: '1px' }}>Mit Bus</h2>
         <h3 style={{ color: 'var(--primary-accent)', fontSize: '22px', marginBottom: '10px' }}>Driver Access</h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '30px' }}>Enter your driver PIN</p>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, BusRecord, RouteStop, Driver, AdminPassword } from '../lib/supabase';
 import { Bus, Map, Users, Lock, Plus, Trash2, Edit3, Save, X, ChevronLeft } from 'lucide-react';
@@ -129,6 +130,43 @@ function BusesTab() {
     load();
   };
 
+  const deleteBus = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this bus? This will also remove associated routes.')) return;
+    
+    // Unassign drivers
+    await supabase.from('drivers').update({ bus_id: null }).eq('bus_id', id);
+    
+    // Delete routes
+    await supabase.from('routes').delete().eq('bus_id', id);
+    
+    // Cancel reservations
+    await supabase.from('reservations').update({ status: 'cancelled' }).eq('bus_id', id).eq('status', 'active');
+    
+    // Delete bus
+    await supabase.from('buses').delete().eq('id', id);
+    
+    load();
+  };
+
+  const [adding, setAdding] = useState(false);
+  const [newLabel, setNewLabel] = useState('');
+  const [newSeats, setNewSeats] = useState('25');
+
+  const addBus = async () => {
+    if (!newLabel) return;
+    const newId = newLabel.toLowerCase().replace(/\s+/g, '');
+    await supabase.from('buses').insert({
+      id: newId,
+      label: newLabel,
+      total_seats: parseInt(newSeats),
+      is_active: false
+    });
+    setAdding(false);
+    setNewLabel('');
+    setNewSeats('25');
+    load();
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -162,34 +200,62 @@ function BusesTab() {
               <div>
                 <p style={{ fontWeight: '700', margin: 0 }}>{bus.label}</p>
                 <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '3px 0 0' }}>
-                  {bus.total_seats} seats · {bus.is_active ? '🟢 Active' : '⚫ Inactive'}
+                  {bus.total_seats} seats
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button style={btn()} onClick={() => { setEditing(bus.id); setEditLabel(bus.label); setEditSeats(String(bus.total_seats)); }}>
-                  <Edit3 size={14} />
+                  <Edit3 size={14} /> Edit
                 </button>
-                <button style={btn(bus.is_active)} onClick={() => toggleActive(bus.id, bus.is_active)}>
-                  {bus.is_active ? 'Deactivate' : 'Activate'}
+                <button style={{ ...btn(), color: '#FF3B30', backgroundColor: 'rgba(255,59,48,0.1)', padding: '10px' }} onClick={() => deleteBus(bus.id)}>
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
           )}
         </div>
       ))}
+
+      {adding ? (
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <input style={input} placeholder="Bus Label (e.g. Bus 6)" value={newLabel} onChange={e => setNewLabel(e.target.value)} />
+          <input style={input} type="number" placeholder="Total Seats" value={newSeats} onChange={e => setNewSeats(e.target.value)} />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button style={btn(true)} onClick={addBus}><Save size={14} /> Add</button>
+            <button style={btn()} onClick={() => setAdding(false)}><X size={14} /> Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button style={{ ...btn(true), marginTop: '8px', width: '100%', justifyContent: 'center' }} onClick={() => setAdding(true)}>
+          <Plus size={16} /> Add Bus
+        </button>
+      )}
     </div>
   );
 }
 
 // ─── Routes Tab ───────────────────────────────────────────
 function RoutesTab() {
-  const [selectedBus, setSelectedBus] = useState('bus1');
+  const [buses, setBuses] = useState<BusRecord[]>([]);
+  const [selectedBus, setSelectedBus] = useState('');
   const [stops, setStops] = useState<RouteStop[]>([]);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ stop_name: '', stop_time: '', stop_type: 'stop' });
-  const busIds = ['bus1', 'bus2', 'bus3', 'bus4', 'bus5'];
+
+  const loadBuses = async () => {
+    const { data } = await supabase.from('buses').select('*').order('id');
+    if (data) {
+      setBuses(data);
+      if (data.length > 0) {
+        setSelectedBus(data[0].id);
+      }
+    }
+  };
+
+  useEffect(() => { loadBuses(); }, []);
 
   const load = async () => {
+    if (!selectedBus) return;
     const { data } = await supabase.from('routes').select('*').eq('bus_id', selectedBus).order('stop_order');
     setStops(data || []);
   };
@@ -213,9 +279,9 @@ function RoutesTab() {
     <div>
       <h3 style={{ marginBottom: '14px', fontSize: '18px', fontWeight: '700' }}>Manage Routes</h3>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto' }} className="hide-scrollbar">
-        {busIds.map((id, i) => (
-          <button key={id} onClick={() => setSelectedBus(id)} style={btn(selectedBus === id)}>
-            Bus {i + 1}
+        {buses.map((bus) => (
+          <button key={bus.id} onClick={() => setSelectedBus(bus.id)} style={btn(selectedBus === bus.id)}>
+            {bus.label}
           </button>
         ))}
       </div>
@@ -257,6 +323,7 @@ function RoutesTab() {
 
 // ─── Drivers Tab ──────────────────────────────────────────
 function DriversTab() {
+  const [buses, setBuses] = useState<BusRecord[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', phone: '', bus_id: '' });
@@ -264,6 +331,8 @@ function DriversTab() {
   const load = async () => {
     const { data } = await supabase.from('drivers').select('*').order('name');
     setDrivers(data || []);
+    const { data: bData } = await supabase.from('buses').select('*').order('id');
+    setBuses(bData || []);
   };
 
   useEffect(() => { load(); }, []);
@@ -285,8 +354,8 @@ function DriversTab() {
               <input style={input} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Phone" />
               <select style={{ ...input }} value={form.bus_id} onChange={e => setForm({ ...form, bus_id: e.target.value })}>
                 <option value="">Unassigned</option>
-                {['bus1','bus2','bus3','bus4','bus5'].map((b, i) => (
-                  <option key={b} value={b}>Bus {i+1}</option>
+                {buses.map((b) => (
+                  <option key={b.id} value={b.id}>{b.label}</option>
                 ))}
               </select>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -365,6 +434,7 @@ function PasswordsTab() {
 
 // ─── Main Management Panel ────────────────────────────────
 export default function ManagementPanel({ onBack }: ManagementPanelProps) {
+  const router = useRouter();
   const [unlocked, setUnlocked] = useState(false);
   const [activeTab, setActiveTab] = useState<ManagementTab>('buses');
 
@@ -384,11 +454,35 @@ export default function ManagementPanel({ onBack }: ManagementPanelProps) {
       transition={{ type: 'tween', ease: 'easeOut', duration: 0.35 }}
     >
       {/* Header */}
-      <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '14px', borderBottom: '1px solid #1c1c1c' }}>
-        <button onClick={onBack} style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px' }}>
-          <ChevronLeft size={18} /> Back
+      <div style={{ padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1c1c1c' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <button onClick={onBack} style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <ChevronLeft size={18} /> Back
+          </button>
+          <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary-accent)', margin: 0 }}>Management</h1>
+        </div>
+        
+        <button
+          onClick={() => router.push('/credits')}
+          style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: 'transparent',
+            border: '1px solid #444',
+            color: '#666',
+            fontSize: '11px',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontFamily: 'Montserrat, sans-serif',
+            flexShrink: 0,
+          }}
+        >
+          i
         </button>
-        <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary-accent)', margin: 0 }}>Management</h1>
       </div>
 
       {!unlocked ? (

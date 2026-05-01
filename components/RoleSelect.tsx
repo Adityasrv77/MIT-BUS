@@ -52,8 +52,33 @@ export default function RoleSelect() {
       transition={{ type: 'tween', ease: 'easeOut', duration: 0.4 }}
     >
       <div style={{ position: 'absolute', top: '40px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--primary-accent)', letterSpacing: '2px' }}>MIT BUS</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: 900, color: 'var(--primary-accent)', letterSpacing: '2px' }}>Mit Bus</h1>
       </div>
+
+      <button
+        onClick={() => router.push('/credits')}
+        style={{
+          position: 'absolute',
+          top: '30px',
+          right: '20px',
+          width: '24px',
+          height: '24px',
+          borderRadius: '50%',
+          background: 'transparent',
+          border: '1px solid #444',
+          color: '#666',
+          fontSize: '11px',
+          fontWeight: '700',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          fontFamily: 'Montserrat, sans-serif',
+          zIndex: 100,
+        }}
+      >
+        i
+      </button>
 
       <motion.div variants={containerVars} initial="hidden" animate="visible" style={{ width: '100%', maxWidth: '350px', textAlign: 'center' }}>
         {isStandalone ? (

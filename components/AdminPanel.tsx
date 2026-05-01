@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import { Map, List, Radio, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
+import ProximityFeed from './ProximityFeed';
 
 const MapView = dynamic(() => import('./MapView'), { ssr: false });
 
@@ -152,8 +153,6 @@ export default function AdminPanel() {
     />
   );
 
-  const buses = ['bus1', 'bus2', 'bus3', 'bus4', 'bus5'];
-
   if (!selectedBus) {
     return (
       <>
@@ -170,33 +169,54 @@ export default function AdminPanel() {
           <div style={{ width: '100%', maxWidth: '400px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button
-                onClick={() => router.back()}
+                onClick={() => router.push('/')}
                 style={{ background: 'var(--surface)', padding: '8px 14px', borderRadius: '8px', color: 'var(--text-primary)', border: '1px solid #333', fontSize: '14px' }}
               >
                 ← Back
               </button>
               <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>Select Your Bus</h2>
             </div>
+            <button
+              onClick={() => router.push('/credits')}
+              style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: 'transparent',
+                border: '1px solid #444',
+                color: '#666',
+                fontSize: '11px',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontFamily: 'Montserrat, sans-serif',
+                flexShrink: 0,
+              }}
+            >
+              i
+            </button>
           </div>
         
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', width: '100%', maxWidth: '400px' }}>
-          {buses.map((bus, idx) => (
+          {allBuses.map((bus, idx) => (
             <motion.div
-              key={bus}
+              key={bus.id}
               style={{
                 backgroundColor: 'var(--card-bg)',
                 border: '1.5px solid var(--card-border)',
                 borderRadius: '16px',
                 padding: '30px 10px',
                 textAlign: 'center',
-                gridColumn: idx === 4 ? '1 / span 2' : 'auto',
+                gridColumn: idx === allBuses.length - 1 && allBuses.length % 2 !== 0 ? '1 / span 2' : 'auto',
                 cursor: 'pointer'
               }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => handleBusSelect(bus)}
+              onClick={() => handleBusSelect(bus.id)}
             >
-              <h3 style={{ fontSize: '24px', margin: 0, color: 'var(--text-primary)' }}>Bus {idx + 1}</h3>
+              <h3 style={{ fontSize: '24px', margin: 0, color: 'var(--text-primary)' }}>{bus.label}</h3>
             </motion.div>
           ))}
           </div>
@@ -256,6 +276,31 @@ export default function AdminPanel() {
         >
           ← Change Bus
         </button>
+
+        <button
+          onClick={() => router.push('/credits')}
+          style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: 'transparent',
+            border: '1px solid #444',
+            color: '#666',
+            fontSize: '11px',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontFamily: 'Montserrat, sans-serif',
+            flexShrink: 0,
+            marginRight: 'auto',
+            marginLeft: '12px'
+          }}
+        >
+          i
+        </button>
+
         <div style={{ textAlign: 'right' }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--primary-accent)' }}>
             {busLabel || `Bus ${selectedBus.replace('bus', '')}`}
@@ -318,6 +363,11 @@ export default function AdminPanel() {
                     {sharing ? 'Broadcasting' : 'Broadcast Location'}
                   </span>
                 </motion.button>
+              </div>
+
+              {/* Proximity Feed */}
+              <div style={{ width: '100%', maxWidth: '400px', marginTop: '20px' }}>
+                <ProximityFeed />
               </div>
 
               {/* Passenger Count */}
