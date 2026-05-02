@@ -11,8 +11,8 @@ const devTeam = [
 ];
 
 const adminTeam = [
-  { role: 'Administrative Officer', name: 'Debojyoti Deb Roy', initial: 'D', phone: '9123456789' },
-  { role: 'Administrative Officer', name: 'Niewkoelang Syiemlieh', initial: 'N', phone: '9123456780' },
+  { role: 'ADMIN', name: 'Debojyoti Deb Roy, Administrative Officer', initial: 'D', phone: '9123456789' },
+  { role: 'ADMIN', name: 'Niewkoelang Syiemlieh, Administrative Officer', initial: 'N', phone: '9123456780' },
   { role: 'Driver', name: 'Driver 1', initial: '1', phone: '9123456781' },
   { role: 'Driver', name: 'Driver 2', initial: '2', phone: '9123456782' },
   { role: 'Driver', name: 'Driver 3', initial: '3', phone: '9123456783' },
