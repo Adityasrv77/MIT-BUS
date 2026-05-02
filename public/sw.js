@@ -69,7 +69,7 @@ self.addEventListener('push', (event) => {
   }
 
   // FCM wraps custom data inside a `data` object
-  const pushData = parsed.data || parsed;
+  const pushData = parsed.data || parsed || {};
 
   const title = pushData.title || 'MIT Bus';
   const options = {
@@ -83,7 +83,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(title, options)
   );
 });
 

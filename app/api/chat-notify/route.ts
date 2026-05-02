@@ -43,15 +43,19 @@ export async function POST(req: Request) {
       }
     });
 
+    console.log(`Sending notification for message: "${text}"`);
+    console.log(`Found ${Object.keys(subscriptions).length} total subscriptions.`);
+    console.log(`Notifying ${tokens.length} users (excluding sender: ${senderId})`);
+
     if (tokens.length === 0) {
       return NextResponse.json({ success: true, message: 'No other users to notify' });
     }
 
-    // 3. Send Multicast Message via FCM (Data payload for custom handling)
+    // 3. Send Multicast Message via FCM
     const message = {
       data: {
         title: 'Transport Chat',
-        body: text,
+        body: String(text),
         url: '/#chat'
       },
       tokens: tokens,
