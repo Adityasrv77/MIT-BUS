@@ -29,11 +29,13 @@ type GeoPoint = {
 };
 
 function getCoords(p: GeoPoint) {
-  let lat = Number(p.Latitude ?? p.latitude ?? p.lat ?? 0);
-  let lng = Number(p.Longitude ?? p.longitude ?? p.lng ?? 0);
+  // Extract values regardless of capitalization or spacing
+  let lat = Number(p.latitude ?? p.Latitude ?? p.lat ?? p['latitude'] ?? 0);
+  let lng = Number(p.longitude ?? p.Longitude ?? p.lng ?? p['longitude'] ?? 0);
 
   // Auto-correct swapped coordinates in the DB (India is lat 20-30, lng 70-90)
-  if (lat > 60 && lng < 40) {
+  // If we see a lat in the 70-90 range, it's definitely the longitude.
+  if (Math.abs(lat) > 60 && Math.abs(lng) < 40) {
     const temp = lat;
     lat = lng;
     lng = temp;
@@ -78,7 +80,9 @@ export function useBusLocations() {
           .from('reservations')
           .select('bus_id, stop_name')
           .eq('status', 'active'),
-        geoPoints.length === 0 ? supabase.from('Geolocation').select('*') : Promise.resolve({ data: geoPoints })
+        supabase
+          .from('Geolocation')
+          .select('*')
       ]);
 
       if (busResult.data) setSupabaseBuses(busResult.data as BusRecord[]);
@@ -96,7 +100,7 @@ export function useBusLocations() {
         setCounts(newCounts);
       }
 
-      if (geoResult.data && geoPoints.length === 0) {
+      if (geoResult.data) {
         setGeoPoints(geoResult.data as GeoPoint[]);
       }
     };
@@ -110,6 +114,7 @@ export function useBusLocations() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'buses' }, fetchData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'routes' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Geolocation' }, fetchData)
       .subscribe();
 
     return () => {
@@ -160,14 +165,14 @@ export function useBusLocations() {
             nearestLoc = p['Location name'];
           }
         });
-        // Only attach if it's within 500 meters
-        if (nearestDist > 500) nearestLoc = undefined;
+        // Only attach if it's within 800 meters
+        if (nearestDist > 800) nearestLoc = undefined;
       }
 
       // Fallback explicitly for MIT University campus if not mapped in DB
       if (!nearestLoc) {
         const dCenter = haversineDistance(lat, lng, 25.615774, 91.990012);
-        if (dCenter < 500) {
+        if (dCenter < 800) {
           nearestLoc = "MIT University Shillong";
         }
       }
