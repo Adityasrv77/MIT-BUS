@@ -65,6 +65,7 @@ export default function SaveLocationPage() {
       if (dbError) throw dbError;
 
       setSuccess(true);
+      alert('Saved!');
       setTimeout(() => {
         router.back();
       }, 2000);
