@@ -24,6 +24,9 @@ export default function GlobalClientInit() {
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleRejection);
 
+    // 3. Background Cleanups
+    fetch('/api/reservations-cleanup').catch(() => {});
+
     return () => {
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleRejection);
