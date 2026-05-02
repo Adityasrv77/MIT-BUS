@@ -224,6 +224,9 @@ export default function CreditsPage() {
           <p style={{ margin: 0, fontSize: '11px', color: '#333', fontWeight: '600' }}>
             MIT University Meghalaya, Shillong
           </p>
+          <p style={{ margin: '8px 0 0', fontSize: '10px', color: '#222', fontWeight: '600', letterSpacing: '1px' }}>
+            © 2026
+          </p>
         </motion.div>
       </div>
     </div>
