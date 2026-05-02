@@ -30,7 +30,7 @@ export async function requestBackgroundSync() {
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BJBpRnWvTD38ZnEFk83javEIG5Eu4uKP30xe8FppGn0_qgU_MruZTBRJT4Y5dfCS8BYILBm3bGYl7XJtKqaKVTk';
 
-import { messaging } from './firebase';
+import { getFirebaseMessaging } from './firebase';
 import { getToken } from 'firebase/messaging';
 
 export async function subscribeToPush() {
@@ -43,7 +43,8 @@ export async function subscribeToPush() {
       throw new Error('Push permission denied');
     }
 
-    if (!messaging) throw new Error('Firebase messaging not initialized');
+    const messaging = await getFirebaseMessaging();
+    if (!messaging) throw new Error('Firebase messaging not initialized or not supported');
 
     // Subscribe to FCM
     const currentToken = await getToken(messaging, {

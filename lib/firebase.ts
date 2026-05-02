@@ -14,14 +14,18 @@ const firebaseConfig = {
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getDatabase(app);
+export { app, db };
 
-let messaging: any = null;
-if (typeof window !== 'undefined') {
-  isSupported().then((supported) => {
+export async function getFirebaseMessaging() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const { getMessaging, isSupported } = await import('firebase/messaging');
+    const supported = await isSupported();
     if (supported) {
-      messaging = getMessaging(app);
+      return getMessaging(app);
     }
-  });
+  } catch (err) {
+    console.error('Messaging not supported', err);
+  }
+  return null;
 }
-
-export { app, db, messaging };
