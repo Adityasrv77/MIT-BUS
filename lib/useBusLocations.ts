@@ -148,8 +148,11 @@ export function useBusLocations() {
       const physicalTotal = Math.max(0, capacity - boarded);
       const available = Math.max(0, physicalTotal - reserved);
 
-      const lat = fb.lat || 25.615765;
-      const lng = fb.lng || 91.990026;
+      const lat = fb.lat;
+      const lng = fb.lng;
+
+      // Skip buses that are "active" but haven't reported coordinates yet
+      if (fb.active && (!lat || !lng)) return null;
 
       let nearestLoc = undefined;
       
@@ -192,7 +195,7 @@ export function useBusLocations() {
         seatsAvailable: available,
         nearestLocation: nearestLoc,
       } as BusData;
-    });
+    }).filter(Boolean) as BusData[];
   }, [fbBuses, supabaseBuses, counts, geoPoints]);
 
   return buses;

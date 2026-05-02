@@ -158,11 +158,22 @@ export function useGeolocation(busId: string | null, active: boolean, sessionId:
     if (!busId || !process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
 
     if (active) {
+      // First, do an immediate update to set active status
       update(ref(db, `buses/${busId}`), { 
         active: true,
         sharing_by: sessionId,
         lastUpdated: Date.now()
       });
+
+      // Then, try to get a one-time quick position to update the map immediately
+      navigator.geolocation.getCurrentPosition((pos) => {
+        update(ref(db, `buses/${busId}`), {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          lastUpdated: Date.now(),
+        });
+      }, null, { enableHighAccuracy: true });
     }
 
     const stopSharing = () => {
