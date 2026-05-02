@@ -66,7 +66,7 @@ export default function AdminPanel() {
       if (currentBus && currentBus.active && currentBus.sharing_by && currentBus.sharing_by !== sessionId) {
         setSharing(false);
         localStorage.removeItem('mit_bus_active_sharing');
-        // Optional: show a toast or alert
+        alert('Another driver has taken over this bus. Location sharing stopped.');
       }
     }
   }, [allBuses, sharing, selectedBus, sessionId]);
