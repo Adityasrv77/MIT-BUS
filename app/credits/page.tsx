@@ -17,9 +17,9 @@ const LinkedinIcon = ({ size = 14, color = "currentColor" }: { size?: number, co
 );
 
 const devTeam = [
-  { role: 'ASSISTANT PROFESSOR', name: 'Bitupan Deka, Concept & Ideation', initial: 'B', linkedin: 'https://linkedin.com' },
-  { role: 'STUDENT', name: 'Onkar Mukherjee, Design', initial: 'O', linkedin: 'https://linkedin.com' },
-  { role: 'STUDENT', name: 'Aditya Srivastava, Development', initial: 'A', linkedin: 'https://linkedin.com' },
+  { role: 'ASSISTANT PROFESSOR', name: 'Bitupan Deka, Concept & Ideation', initial: 'B', linkedin: 'https://www.linkedin.com/in/bitupan-deka-b5109b255?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app' },
+  { role: 'STUDENT', name: 'Onkar Mukherjee, Design', initial: 'O', linkedin: 'https://www.linkedin.com/in/onkar-mukherjee-a0a086222?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app' },
+  { role: 'STUDENT', name: 'Aditya Srivastava, Development', initial: 'A', linkedin: 'https://www.linkedin.com/in/aditya-srivastava-561961378?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app' },
 ];
 
 const adminTeam = [
