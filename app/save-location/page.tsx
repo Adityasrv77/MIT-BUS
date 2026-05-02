@@ -56,7 +56,7 @@ export default function SaveLocationPage() {
         .from('Geolocation')
         .insert([
           {
-            name: placeName.trim(),
+            'Location name': placeName.trim(),
             latitude: coords.lat,
             longitude: coords.lng,
           },
