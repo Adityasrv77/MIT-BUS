@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bell, BellOff } from 'lucide-react';
-import { ref, push, onValue, serverTimestamp } from 'firebase/database';
+import { ref, push, onValue, serverTimestamp, set } from 'firebase/database';
 import { db } from '../lib/firebase';
+import { subscribeToPush } from '../lib/pwa';
 
 interface Message {
   id: string;
@@ -109,6 +110,15 @@ export default function ChatSystem() {
       const granted = permission === 'granted';
       setNotificationsEnabled(granted);
       notifsEnabledRef.current = granted;
+      
+      if (granted) {
+        // Automatically subscribe them to Web Push for offline background notifications
+        const sub = await subscribeToPush();
+        if (sub && userId) {
+          const subRef = ref(db, `push_subscriptions/${userId}`);
+          await set(subRef, JSON.parse(JSON.stringify(sub)));
+        }
+      }
     }
   };
 
@@ -125,6 +135,13 @@ export default function ChatSystem() {
       senderId: userId,
       timestamp: serverTimestamp()
     });
+
+    // Trigger backend to send Web Push notifications to offline PWA users
+    fetch('/api/chat-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: textToSend, senderId: userId })
+    }).catch(err => console.error('Failed to trigger push notify:', err));
   };
 
   return (

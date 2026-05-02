@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { subscribeToPush } from '../lib/pwa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellOff, X } from 'lucide-react';
+import { ref, set } from 'firebase/database';
+import { db } from '../lib/firebase';
 
 export default function PushManager() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -25,8 +27,16 @@ export default function PushManager() {
     if (sub) {
       setPermission('granted');
       setShowPrompt(false);
-      // In a real app, you would send 'sub' to your backend here
-      console.log('Subscription to save:', JSON.stringify(sub));
+      
+      let uid = localStorage.getItem('mit_chat_uid');
+      if (!uid) {
+        uid = crypto.randomUUID();
+        localStorage.setItem('mit_chat_uid', uid);
+      }
+
+      const subRef = ref(db, `push_subscriptions/${uid}`);
+      await set(subRef, JSON.parse(JSON.stringify(sub)));
+      console.log('Subscription saved to Firebase');
     }
   };
 

@@ -28,7 +28,7 @@ export async function requestBackgroundSync() {
 
 // ── Push Notifications ───────────────────────────────────────────────────────
 
-const VAPID_PUBLIC_KEY = 'BKSjoNhbtdBRbvkJsg8Z8BFSTRIRm7FQq4DZy3InSEQkdCAVIRNnoTQ_De8iPiyxal8LoW7O13uV6HLomSxFr5A';
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BJBpRnWvTD38ZnEFk83javEIG5Eu4uKP30xe8FppGn0_qgU_MruZTBRJT4Y5dfCS8BYILBm3bGYl7XJtKqaKVTk';
 
 export async function subscribeToPush() {
   try {
