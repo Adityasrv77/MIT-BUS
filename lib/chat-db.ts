@@ -46,16 +46,27 @@ export async function getAllMessages(): Promise<LocalMessage[]> {
 }
 
 export async function cleanupOldLocalMessages(maxAgeMs: number = 4 * 60 * 60 * 1000) {
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const timeInMinutes = hour * 60 + minute;
+
+  // Window: 07:00 AM (420 mins) to 10:30 AM (630 mins)
+  if (timeInMinutes >= 420 && timeInMinutes <= 630) {
+    console.log('Skipping cleanup during morning peak hours (07:00 - 10:30)');
+    return;
+  }
+
   const db = await openChatDb();
   const tx = db.transaction(STORE_NAME, 'readwrite');
   const store = tx.objectStore(STORE_NAME);
   const request = store.openCursor();
-  const now = Date.now();
+  const nowMs = now.getTime();
 
   request.onsuccess = (event: any) => {
     const cursor = event.target.result;
     if (cursor) {
-      if (now - cursor.value.timestamp > maxAgeMs) {
+      if (nowMs - cursor.value.timestamp > maxAgeMs) {
         cursor.delete();
       }
       cursor.continue();

@@ -18,6 +18,19 @@ if (!admin.apps.length) {
 
 export async function GET() {
   try {
+    // Get current time in IST (India Standard Time)
+    const istNow = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const istHour = istNow.getHours();
+    const istMinute = istNow.getMinutes();
+    const timeInMinutes = istHour * 60 + istMinute;
+
+    // Window: 07:00 AM (420 mins) to 10:30 AM (630 mins)
+    if (timeInMinutes >= 420 && timeInMinutes <= 630) {
+      return NextResponse.json({ 
+        message: 'Cleanup skipped: Currently in morning peak window (07:00 - 10:30 IST).' 
+      });
+    }
+
     const db = admin.database();
     const chatRef = db.ref('transport_chat/messages');
     
