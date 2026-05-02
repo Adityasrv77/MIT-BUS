@@ -125,56 +125,6 @@ export default memo(function MapView({ buses, selectedBusId }: MapViewProps) {
       ))}
 
       <MapUpdater selectedBusId={selectedBusId} buses={buses} />
-
-      {/* TEMP MOVER OVERLAY */}
-      <div style={{ position: 'absolute', top: 60, right: 10, zIndex: 1000 }}>
-        <TempMover />
-      </div>
     </MapContainer>
   );
 });
-
-// Temp component to test moving buses via Firebase
-function TempMover() {
-  const [coords, setCoords] = useState('');
-  const [busId, setBusId] = useState('bus1');
-
-  const handleMove = async () => {
-    const [lat, lng] = coords.split(',').map(s => parseFloat(s.trim()));
-    if (!lat || !lng) return alert('Invalid coordinates format. Use "lat, lng"');
-    try {
-      await update(ref(db, `buses/${busId}`), {
-        lat,
-        lng,
-        active: true,
-        lastUpdated: Date.now()
-      });
-      alert(`Moved ${busId} to ${lat}, ${lng}`);
-    } catch(e) {
-      console.error(e);
-      alert('Failed to move bus');
-    }
-  };
-
-  return (
-    <div style={{ background: 'rgba(0,0,0,0.85)', padding: '12px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid #444', width: '200px' }}>
-      <h4 style={{ margin: 0, color: 'var(--primary-accent)', fontSize: '13px' }}>Test Bus Mover</h4>
-      <input 
-        value={busId} onChange={e => setBusId(e.target.value)} 
-        placeholder="bus ID (e.g. bus1)" 
-        style={{ width: '100%', padding: '6px', fontSize: '12px', borderRadius: '6px', border: '1px solid #333', background: '#222', color: '#fff' }} 
-      />
-      <input 
-        value={coords} onChange={e => setCoords(e.target.value)} 
-        placeholder="25.615, 91.990" 
-        style={{ width: '100%', padding: '6px', fontSize: '12px', borderRadius: '6px', border: '1px solid #333', background: '#222', color: '#fff' }} 
-      />
-      <button 
-        onClick={handleMove} 
-        style={{ background: 'var(--primary-accent)', color: '#000', padding: '6px', cursor: 'pointer', borderRadius: '6px', border: 'none', fontWeight: 'bold', fontSize: '12px' }}
-      >
-        Teleport Bus
-      </button>
-    </div>
-  );
-}
