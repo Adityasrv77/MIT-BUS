@@ -87,6 +87,19 @@ export default function BusCard({ bus, onClick }: BusCardProps) {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            background: bus.active ? 'linear-gradient(135deg, rgba(244, 166, 32, 0.2), rgba(244, 166, 32, 0.1))' : 'rgba(255, 255, 255, 0.05)', 
+            color: bus.active ? 'var(--primary-accent)' : '#666',
+            padding: '6px 14px',
+            borderRadius: '12px',
+            fontSize: '13px',
+            fontWeight: '700',
+            border: bus.active ? '1px solid rgba(244, 166, 32, 0.2)' : '1px solid rgba(255, 255, 255, 0.05)',
+            letterSpacing: '0.5px'
+          }}>
+            {bus.active ? `${bus.seatsAvailable}/${bus.totalSeats || 25}` : 'OFFLINE'}
+          </div>
+
           <button
             onClick={fetchDriverInfo}
             style={{
@@ -105,19 +118,6 @@ export default function BusCard({ bus, onClick }: BusCardProps) {
           >
             <Info size={16} />
           </button>
-          
-          <div style={{ 
-            background: bus.active ? 'linear-gradient(135deg, rgba(244, 166, 32, 0.2), rgba(244, 166, 32, 0.1))' : 'rgba(255, 255, 255, 0.05)', 
-            color: bus.active ? 'var(--primary-accent)' : '#666',
-            padding: '6px 14px',
-            borderRadius: '12px',
-            fontSize: '13px',
-            fontWeight: '700',
-            border: bus.active ? '1px solid rgba(244, 166, 32, 0.2)' : '1px solid rgba(255, 255, 255, 0.05)',
-            letterSpacing: '0.5px'
-          }}>
-            {bus.active ? `${bus.seatsAvailable}/${bus.totalSeats || 25}` : 'OFFLINE'}
-          </div>
         </div>
       </motion.div>
 
