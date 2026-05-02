@@ -385,11 +385,6 @@ export default function AdminPanel() {
                 </motion.button>
               </div>
 
-              {/* Proximity Feed */}
-              <div style={{ width: '100%', maxWidth: '400px', marginTop: '20px' }}>
-                <ProximityFeed />
-              </div>
-
               {/* Passenger Count */}
               <div style={{ marginTop: '30px', display: 'flex', gap: '12px', width: '100%', maxWidth: '400px' }}>
                 <div style={{ flex: 1, background: 'var(--card-bg)', padding: '16px', borderRadius: '16px', border: '1px solid #222', textAlign: 'center' }}>
