@@ -8,7 +8,7 @@ import ManagementPanel from './ManagementPanel';
 import LineView from './LineView';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Map, List, Radio, Users } from 'lucide-react';
+import { Map, List, Radio, Users, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 import ProximityFeed from './ProximityFeed';

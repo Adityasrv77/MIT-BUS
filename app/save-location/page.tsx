@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Navigation, Save, X, ChevronLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useRouter as useNextRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function SaveLocationPage() {
-  const router = useNextRouter();
+  const router = useRouter();
   const [placeName, setPlaceName] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(false);
