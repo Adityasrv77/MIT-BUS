@@ -6,6 +6,7 @@ import { Send, Bell, BellOff } from 'lucide-react';
 import { ref, push, onValue, serverTimestamp, set } from 'firebase/database';
 import { db } from '../lib/firebase';
 import { subscribeToPush } from '../lib/pwa';
+import { saveMessages, getAllMessages, cleanupOldLocalMessages, LocalMessage } from '../lib/chat-db';
 
 interface Message {
   id: string;
@@ -53,6 +54,31 @@ export default function ChatSystem() {
     }
     setUserId(id);
 
+    // ── Local IndexedDB Logic ─────────────────────────────────
+    const initLocal = async () => {
+      // 1. Cleanup old local messages
+      await cleanupOldLocalMessages();
+      
+      // 2. Load from local DB for instant UI
+      const localMsgs = await getAllMessages();
+      if (localMsgs.length > 0) {
+        setMessages(prev => {
+          const systemMsg = prev[0];
+          const combined = localMsgs.map(m => ({
+            id: m.id,
+            text: m.text,
+            sender: m.senderId === id ? ('user' as const) : ('other' as const),
+            timestamp: new Date(m.timestamp)
+          }));
+          return [systemMsg, ...combined].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        });
+      }
+
+      // 3. Trigger server-side cleanup (background)
+      fetch('/api/chat-cleanup').catch(() => {});
+    };
+    initLocal();
+
     const chatRef = ref(db, 'transport_chat/messages');
     let isInitialLoad = true;
     let initialCount = 0;
@@ -66,6 +92,15 @@ export default function ChatSystem() {
           sender: val.senderId === id ? 'user' : 'other',
           timestamp: val.timestamp ? new Date(val.timestamp) : new Date()
         }));
+
+        // Save to local IndexedDB for offline access
+        const toSave: LocalMessage[] = Object.entries(data).map(([key, val]: [string, any]) => ({
+          id: key,
+          text: val.text,
+          senderId: val.senderId,
+          timestamp: val.timestamp || Date.now()
+        }));
+        saveMessages(toSave);
         
         parsedMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
         
