@@ -206,20 +206,25 @@ export default function CreditsPage() {
         <Section label="Developer Team" members={devTeam} startDelay={0.5} />
 
         {/* Footer note */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           style={{
-            marginTop: '16px',
-            fontSize: '12px',
-            color: '#2e2e2e',
+            marginTop: '32px',
             textAlign: 'center',
-            fontWeight: '500',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px'
           }}
         >
-          Made with care at MIT Shillong
-        </motion.p>
+          <p style={{ margin: 0, fontSize: '13px', color: '#F69423', fontWeight: '800', letterSpacing: '0.5px' }}>
+            MIT Robotics and Coding Club
+          </p>
+          <p style={{ margin: 0, fontSize: '11px', color: '#333', fontWeight: '600' }}>
+            MIT University Meghalaya, Shillong
+          </p>
+        </motion.div>
       </div>
     </div>
   );
