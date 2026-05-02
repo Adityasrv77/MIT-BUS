@@ -230,28 +230,50 @@ export default function GuestView() {
           <h1 style={{ fontSize: '18px', fontWeight: '900', margin: 0, color: 'var(--primary-accent)', letterSpacing: '2px' }}>Mit Bus</h1>
           <div style={{ width: '20px', height: '2px', backgroundColor: 'var(--primary-accent)', margin: '2px auto 0', borderRadius: '1px' }} />
         </div>
-        <button
-          id="credits-info-btn"
-          onClick={() => router.push('/credits')}
-          style={{
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            background: 'transparent',
-            border: '1px solid #444',
-            color: '#666',
-            fontSize: '11px',
-            fontWeight: '700',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            fontFamily: 'Montserrat, sans-serif',
-            flexShrink: 0,
-          }}
-        >
-          i
-        </button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => router.push('/save-location')}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '12px',
+              background: 'rgba(246, 148, 35, 0.1)',
+              border: '1px solid rgba(246, 148, 35, 0.2)',
+              color: 'var(--primary-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <MapPin size={18} />
+          </button>
+          
+          <button
+            id="credits-info-btn"
+            onClick={() => router.push('/credits')}
+            style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: 'transparent',
+              border: '1px solid #444',
+              color: '#666',
+              fontSize: '11px',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontFamily: 'Montserrat, sans-serif',
+              flexShrink: 0,
+            }}
+          >
+            i
+          </button>
+        </div>
       </div>
 
       <div style={{ flex: 1, position: 'relative', overflowY: activeTab === 'map' ? 'hidden' : 'auto' }} className="hide-scrollbar">

@@ -278,6 +278,26 @@ export default function AdminPanel() {
         </button>
 
         <button
+          onClick={() => router.push('/save-location')}
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '12px',
+            background: 'rgba(246, 148, 35, 0.1)',
+            border: '1px solid rgba(246, 148, 35, 0.2)',
+            color: 'var(--primary-accent)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            marginLeft: '12px'
+          }}
+        >
+          <MapPin size={18} />
+        </button>
+
+        <button
           onClick={() => router.push('/credits')}
           style={{
             width: '24px',
@@ -295,7 +315,7 @@ export default function AdminPanel() {
             fontFamily: 'Montserrat, sans-serif',
             flexShrink: 0,
             marginRight: 'auto',
-            marginLeft: '12px'
+            marginLeft: '8px'
           }}
         >
           i
