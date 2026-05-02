@@ -23,12 +23,12 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   // Customize notification here
-  const notificationTitle = payload.notification.title || 'MIT Bus';
+  const notificationTitle = payload.data?.title || 'Transport Chat';
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.data?.body || 'New message',
     icon: '/icon-192.png',
     data: {
-      url: payload.webpush?.fcmOptions?.link || payload.fcmOptions?.link || '/#chat'
+      url: payload.data?.url || '/#chat'
     }
   };
 

@@ -47,16 +47,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'No other users to notify' });
     }
 
-    // 3. Send Multicast Message via FCM
+    // 3. Send Multicast Message via FCM (Data payload for custom handling)
     const message = {
-      notification: {
+      data: {
         title: 'Transport Chat',
         body: text,
-      },
-      webpush: {
-        fcmOptions: {
-          link: '/#chat'
-        }
+        url: '/#chat'
       },
       tokens: tokens,
     };
