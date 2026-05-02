@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
-import webpush from 'web-push';
+import admin from 'firebase-admin';
 
-// Configure Web Push with our VAPID keys
-webpush.setVAPIDDetails(
-  'mailto:support@mit-bus.app',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+// Initialize Firebase Admin (only once)
+if (!admin.apps.length) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        // Replace escaped newlines
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    });
+  } catch (error: any) {
+    console.error('Firebase Admin init error:', error.stack);
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -16,48 +26,58 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
-    // 1. Fetch all push subscriptions from Firebase RTDB via HTTP REST
-    const fbUrl = `${process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL}/push_subscriptions.json`;
-    const fbRes = await fetch(fbUrl);
-    
-    if (!fbRes.ok) {
-      return NextResponse.json({ error: 'Failed to fetch subscriptions' }, { status: 500 });
-    }
+    // 1. Fetch all FCM tokens from Firebase RTDB
+    const db = admin.database();
+    const snapshot = await db.ref('push_subscriptions').once('value');
+    const subscriptions = snapshot.val();
 
-    const subscriptions: Record<string, any> = await fbRes.json();
     if (!subscriptions) {
       return NextResponse.json({ success: true, message: 'No subscriptions found' });
     }
 
-    // 2. Filter out the sender and send notifications
-    const sendPromises = Object.entries(subscriptions).map(async ([uid, sub]) => {
-      // Don't notify the person who sent the message
-      if (uid === senderId) return;
-
-      try {
-        await webpush.sendNotification(
-          sub,
-          JSON.stringify({
-            title: 'Transport Chat',
-            body: text,
-            url: '/#chat'
-          })
-        );
-      } catch (err: any) {
-        // If subscription is gone/expired, log it (or delete it from db in a real app)
-        if (err.statusCode === 410 || err.statusCode === 404) {
-          console.log(`Subscription ${uid} is expired.`);
-        } else {
-          console.error(`Error sending to ${uid}:`, err);
-        }
+    // 2. Filter out the sender's token
+    const tokens: string[] = [];
+    Object.entries(subscriptions).forEach(([uid, token]) => {
+      if (uid !== senderId && typeof token === 'string') {
+        tokens.push(token);
       }
     });
 
-    await Promise.all(sendPromises);
+    if (tokens.length === 0) {
+      return NextResponse.json({ success: true, message: 'No other users to notify' });
+    }
 
-    return NextResponse.json({ success: true });
+    // 3. Send Multicast Message via FCM
+    const message = {
+      notification: {
+        title: 'Transport Chat',
+        body: text,
+      },
+      webpush: {
+        fcmOptions: {
+          link: '/#chat'
+        }
+      },
+      tokens: tokens,
+    };
+
+    const response = await admin.messaging().sendEachForMulticast(message);
+    
+    // Cleanup expired/invalid tokens
+    if (response.failureCount > 0) {
+      const failedTokens: string[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          failedTokens.push(tokens[idx]);
+          // In a real app, delete these from the database
+        }
+      });
+      console.log('List of failed tokens:', failedTokens);
+    }
+
+    return NextResponse.json({ success: true, successCount: response.successCount });
   } catch (err: any) {
-    console.error('Chat push notification error:', err);
+    console.error('FCM Push notification error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -30,6 +30,9 @@ export async function requestBackgroundSync() {
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BJBpRnWvTD38ZnEFk83javEIG5Eu4uKP30xe8FppGn0_qgU_MruZTBRJT4Y5dfCS8BYILBm3bGYl7XJtKqaKVTk';
 
+import { messaging } from './firebase';
+import { getToken } from 'firebase/messaging';
+
 export async function subscribeToPush() {
   try {
     const registration = await navigator.serviceWorker.ready;
@@ -40,14 +43,20 @@ export async function subscribeToPush() {
       throw new Error('Push permission denied');
     }
 
-    // Subscribe
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    if (!messaging) throw new Error('Firebase messaging not initialized');
+
+    // Subscribe to FCM
+    const currentToken = await getToken(messaging, {
+      vapidKey: VAPID_PUBLIC_KEY,
+      serviceWorkerRegistration: registration
     });
 
-    console.log('Push Subscribed:', subscription);
-    return subscription;
+    if (currentToken) {
+      console.log('FCM Token received');
+      return currentToken; // We'll store this token instead of the VAPID subscription
+    } else {
+      throw new Error('No registration token available.');
+    }
   } catch (err) {
     console.error('Push subscription failed:', err);
   }

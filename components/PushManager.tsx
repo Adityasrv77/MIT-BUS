@@ -35,8 +35,8 @@ export default function PushManager() {
       }
 
       const subRef = ref(db, `push_subscriptions/${uid}`);
-      await set(subRef, JSON.parse(JSON.stringify(sub)));
-      console.log('Subscription saved to Firebase');
+      await set(subRef, sub);
+      console.log('FCM Token saved to Firebase');
     }
   };
 

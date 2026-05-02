@@ -116,7 +116,7 @@ export default function ChatSystem() {
         const sub = await subscribeToPush();
         if (sub && userId) {
           const subRef = ref(db, `push_subscriptions/${userId}`);
-          await set(subRef, JSON.parse(JSON.stringify(sub)));
+          await set(subRef, sub);
         }
       }
     }
