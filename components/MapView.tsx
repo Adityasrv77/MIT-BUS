@@ -88,7 +88,7 @@ type MapViewProps = {
 const CENTER: [number, number] = [25.615774, 91.990012];
 
 export default memo(function MapView({ buses, selectedBusId }: MapViewProps) {
-  const activeBuses = useMemo(() => buses.filter(b => b.active), [buses]);
+  const activeBuses = useMemo(() => buses.filter(b => b.active && b.hasSignal), [buses]);
 
   return (
     <MapContainer
