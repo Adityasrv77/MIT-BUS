@@ -59,22 +59,26 @@ async function flushGpsQueue() {
 // ── Push Notifications ─────────────────────────────────────────────────────
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'MIT Bus', body: 'New update available' };
+  let parsed = {};
   if (event.data) {
     try {
-      data = event.data.json();
+      parsed = event.data.json();
     } catch (e) {
-      data.body = event.data.text();
+      parsed = { body: event.data.text() };
     }
   }
 
+  // FCM wraps custom data inside a `data` object
+  const pushData = parsed.data || parsed;
+
+  const title = pushData.title || 'MIT Bus';
   const options = {
-    body: data.body,
+    body: pushData.body || 'New message',
     icon: '/icon-192.png',
     badge: '/favicon.png',
     vibrate: [100, 50, 100],
     data: {
-      url: data.url || '/'
+      url: pushData.url || '/'
     }
   };
 
