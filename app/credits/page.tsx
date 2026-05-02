@@ -2,12 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Phone } from 'lucide-react';
+import { Phone, Linkedin } from 'lucide-react';
 
 const devTeam = [
-  { role: 'Concept & Ideation', name: 'Bitupan Deka', initial: 'B' },
-  { role: 'Design', name: 'Onkar Mukherjee', initial: 'O' },
-  { role: 'Development', name: 'Aditya Srivastava', initial: 'A' },
+  { role: 'ASSISTANT PROFESSOR', name: 'Bitupan Deka, Concept & Ideation', initial: 'B', linkedin: 'https://linkedin.com' },
+  { role: 'STUDENT', name: 'Onkar Mukherjee, Design', initial: 'O', linkedin: 'https://linkedin.com' },
+  { role: 'STUDENT', name: 'Aditya Srivastava, Development', initial: 'A', linkedin: 'https://linkedin.com' },
 ];
 
 const adminTeam = [
@@ -26,7 +26,7 @@ function Section({
   startDelay = 0,
 }: {
   label: string;
-  members: { role: string; name: string; initial: string; phone?: string }[];
+  members: { role: string; name: string; initial: string; phone?: string; linkedin?: string }[];
   startDelay?: number;
 }) {
   return (
@@ -35,7 +35,7 @@ function Section({
         {label}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {members.map(({ role, name, initial, phone }, i) => (
+        {members.map(({ role, name, initial, phone, linkedin }, i) => (
           <motion.div
             key={`${label}-${name}`}
             initial={{ opacity: 0, x: -12 }}
@@ -74,25 +74,48 @@ function Section({
               </div>
             </div>
 
-            {phone && (
-              <a 
-                href={`tel:${phone}`}
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(246,148,35,0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#F69423',
-                  textDecoration: 'none',
-                  border: '1px solid rgba(246,148,35,0.2)'
-                }}
-              >
-                <Phone size={14} />
-              </a>
-            )}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {phone && (
+                <a 
+                  href={`tel:${phone}`}
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(246,148,35,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#F69423',
+                    textDecoration: 'none',
+                    border: '1px solid rgba(246,148,35,0.2)'
+                  }}
+                >
+                  <Phone size={14} />
+                </a>
+              )}
+              {linkedin && (
+                <a 
+                  href={linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(0,119,181,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#0077B5',
+                    textDecoration: 'none',
+                    border: '1px solid rgba(0,119,181,0.2)'
+                  }}
+                >
+                  <Linkedin size={14} fill="#0077B5" />
+                </a>
+              )}
+            </div>
           </motion.div>
         ))}
       </div>
