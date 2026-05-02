@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Home, Map as MapIcon, Route } from 'lucide-react';
+import { Home, Map as MapIcon, Route, MessageCircle } from 'lucide-react';
 
-type Tab = 'home' | 'map' | 'line';
+type Tab = 'home' | 'map' | 'line' | 'chat';
 
 type BottomNavProps = {
   activeTab: Tab;
@@ -15,6 +15,7 @@ export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'map', icon: MapIcon, label: 'Map' },
     { id: 'line', icon: Route, label: 'Timeline' },
+    { id: 'chat', icon: MessageCircle, label: 'Chat' },
   ];
 
   return (

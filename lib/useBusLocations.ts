@@ -148,8 +148,7 @@ export function useBusLocations() {
 
       let nearestLoc = undefined;
       
-      // DEBUG LOG
-      if (id === 'bus1') console.log('DEBUG GeoPoints:', geoPoints.length, geoPoints[0]);
+      // Removed DEBUG LOG to prevent console flooding
 
       if (geoPoints.length > 0 && fb.lat && fb.lng) {
         let nearestDist = Infinity;

@@ -11,10 +11,11 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, MapPin, Bus } from 'lucide-react';
 import ProximityFeed from './ProximityFeed';
+import ChatSystem from './ChatSystem';
 
 const MapView = dynamic(() => import('./MapView'), { ssr: false });
 
-type Tab = 'home' | 'map' | 'line';
+type Tab = 'home' | 'map' | 'line' | 'chat';
 
 // Stable session ID per device
 function getSessionId() {
@@ -43,12 +44,12 @@ export default function GuestView() {
   useEffect(() => {
     // Read initial hash
     const hash = window.location.hash.replace('#', '') as Tab;
-    if (hash === 'map' || hash === 'line') setActiveTabState(hash);
+    if (hash === 'map' || hash === 'line' || hash === 'chat') setActiveTabState(hash);
 
     // Listen for browser back/forward
     const onPop = () => {
       const h = window.location.hash.replace('#', '') as Tab;
-      setActiveTabState(h === 'map' || h === 'line' ? h : 'home');
+      setActiveTabState(h === 'map' || h === 'line' || h === 'chat' ? h : 'home');
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -710,6 +711,12 @@ export default function GuestView() {
         {activeTab === 'line' && (
           <div style={{ paddingBottom: '100px' }}>
             <LineView />
+          </div>
+        )}
+
+        {activeTab === 'chat' && (
+          <div style={{ height: '100%' }}>
+            <ChatSystem />
           </div>
         )}
       </div>
